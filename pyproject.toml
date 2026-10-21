@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqlite-mcp-explorer"
+version = "0.1.0"
+description = "Read-only SQL access for AI agents over MCP, with defense in depth: read-only connection, SQLite authorizer, row cap, timeout."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["mcp>=1.2,<2", "starlette>=0.37", "uvicorn>=0.30"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27", "ruff>=0.5"]
+
+[project.scripts]
+sqlite-explorer-web = "sqlite_explorer.web:main"
+sqlite-explorer-mcp = "sqlite_explorer.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sqlite_explorer = ["static/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+ignore = ["SIM905"]

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>sqlite-explorer</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#e3e3e3;--card:#f7f7f8;--acc:#2457d6;--bad:#c0392b}
+@media (prefers-color-scheme:dark){:root{--bg:#16171a;--fg:#ececec;--mut:#9a9a9a;--line:#33353a;--card:#1f2024;--acc:#7ea2ff;--bad:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:24px 16px;display:grid;grid-template-columns:230px 1fr;gap:20px}
+@media (max-width:760px){main{grid-template-columns:1fr}}
+h1{font-size:22px;margin:0 0 4px;grid-column:1/-1}p.sub{color:var(--mut);margin:0;grid-column:1/-1}
+aside{font-size:13px}aside h3{margin:0 0 6px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+aside .t{margin-bottom:10px}aside b{font-family:ui-monospace,monospace}aside div.c{color:var(--mut);font:12px ui-monospace,monospace;padding-left:8px}
+textarea{width:100%;height:120px;font:13px ui-monospace,monospace;padding:10px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer;margin:8px 8px 0 0}
+button.alt{background:transparent;color:var(--acc);border:1px solid var(--acc);font-size:12px;padding:5px 10px}
+#msg{margin-top:12px;font-size:14px;min-height:20px}.bad{color:var(--bad)}.mut{color:var(--mut)}
+.wrap{overflow-x:auto;margin-top:10px}table{border-collapse:collapse;font-size:13px;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 9px;text-align:left;white-space:nowrap}th{color:var(--mut)}
+</style></head><body><main>
+<h1>sqlite-explorer</h1>
+<p class="sub">Read-only SQL over a synthetic shop database. Writes are rejected.</p>
+<aside id="schema"></aside>
+<section>
+<textarea id="sql" spellcheck="false">SELECT p.category, ROUND(SUM(oi.quantity * p.price), 2) AS revenue
+FROM order_items oi
+JOIN products p ON p.id = oi.product_id
+JOIN orders o ON o.id = oi.order_id
+WHERE o.status = 'shipped'
+GROUP BY p.category
+ORDER BY revenue DESC;</textarea>
+<div><button id="run">Run query</button>
+<button class="alt" data-q="SELECT country, COUNT(*) AS customers FROM customers GROUP BY country ORDER BY customers DESC">customers by country</button>
+<button class="alt" data-q="DROP TABLE customers">try DROP TABLE</button>
+<button class="alt" data-q="SELECT * FROM customers; DELETE FROM orders">try 2 statements</button>
+<button class="alt" data-q="WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM r) SELECT COUNT(*) FROM r">try infinite query</button></div>
+<div id="msg"></div><div class="wrap"><table id="out"></table></div>
+</section>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'NULL').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+fetch('/api/schema').then(r=>r.json()).then(j=>{$('schema').innerHTML='<h3>Tables</h3>'+j.tables.map(t=>`<div class="t"><b>${esc(t.table)}</b> <span class="mut">(${t.row_count})</span>${t.columns.map(c=>`<div class="c">${esc(c.name)} ${esc(c.type)}${c.primary_key?' pk':''}</div>`).join('')}</div>`).join('')});
+async function run(){
+  $('msg').textContent='Running...';$('msg').className='mut';$('out').innerHTML='';
+  const t=performance.now();
+  const r=await fetch('/api/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:$('sql').value})});
+  const j=await r.json();
+  if(!r.ok){$('msg').className='bad';$('msg').textContent=(j.kind==='timeout'?'Timeout: ':'Rejected: ')+j.error;return}
+  $('msg').className='mut';$('msg').textContent=`${j.row_count} row(s)${j.truncated?' (truncated)':''} in ${Math.round(performance.now()-t)} ms`;
+  $('out').innerHTML='<thead><tr>'+j.columns.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>'+j.rows.map(r=>'<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+}
+$('run').onclick=run;
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{$('sql').value=b.dataset.q;run()});
+run();
+</script></main></body></html>
