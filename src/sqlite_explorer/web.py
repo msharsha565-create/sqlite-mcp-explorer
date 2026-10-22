@@ -22,7 +22,7 @@ async def index(request: Request) -> HTMLResponse:
 
 def get_generator():
     return resolve_generator(os.environ.get("TEXT2SQL_MODEL", "template"),
-                             api_key=os.environ.get("OPENAI_API_KEY"))
+                             api_key=os.environ.get(os.environ.get("TEXT2SQL_API_KEY_ENV", "OPENAI_API_KEY")))
 
 
 async def _json_object(request: Request) -> dict | None:

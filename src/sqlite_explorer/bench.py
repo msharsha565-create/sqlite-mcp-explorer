@@ -15,6 +15,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sqlite-explorer-bench", description=__doc__)
     parser.add_argument("--generator", default="template",
                         help="'template' (baseline, no LLM) or openai:MODEL@BASE_URL")
+    parser.add_argument("--api-key-env", default="OPENAI_API_KEY",
+                        help="Environment variable holding the API key (default: OPENAI_API_KEY)")
     parser.add_argument("--cases", help="Benchmark JSONL (default: built-in, for the sample DB)")
     parser.add_argument("--out", help="Write the full run JSON here")
     parser.add_argument("--min-accuracy", type=float,
@@ -22,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     db = SafeDatabase(default_db_path(), max_rows=10_000)
-    gen = resolve_generator(args.generator, api_key=os.environ.get("OPENAI_API_KEY"))
+    gen = resolve_generator(args.generator, api_key=os.environ.get(args.api_key_env))
     run = run_benchmark(db, gen, load_benchmark(args.cases), name=args.generator)
     if args.out:
         Path(args.out).write_text(json.dumps(run, indent=2))

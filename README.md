@@ -32,6 +32,18 @@ everything else. Plug in any OpenAI-compatible model (OpenAI, Ollama, vLLM, LM S
 TEXT2SQL_MODEL="openai:llama3@http://localhost:11434/v1" sqlite-explorer-web
 ```
 
+Gemini works through Google's OpenAI-compatible endpoint; keep the key under its own name:
+
+```bash
+GEMINI_API_KEY=... TEXT2SQL_API_KEY_ENV=GEMINI_API_KEY \
+TEXT2SQL_MODEL="openai:<gemini-model>@https://generativelanguage.googleapis.com/v1beta/openai" \
+sqlite-explorer-web
+GEMINI_API_KEY=... sqlite-explorer-bench --api-key-env GEMINI_API_KEY \
+  --generator "openai:<gemini-model>@https://generativelanguage.googleapis.com/v1beta/openai"
+```
+
+Use a current model name from the provider's docs.
+
 Benchmark any generator on 53 questions across 10 categories (counts, aggregates, joins,
 group-by, subqueries, top-N, dates). Reference answers are executed SQL, not text:
 
@@ -93,7 +105,7 @@ ruff check src tests
 
 ## Verified vs not verified
 
-- **Verified**: the sandbox and benchmark logic (48 tests, including attack queries and a perfect
+- **Verified**: the sandbox and benchmark logic (49 tests, including attack queries and a perfect
   "oracle" generator that scores 100%); the OpenAI-compatible generator against a mocked transport;
   and the benchmark CLI end to end against a local fake OpenAI-compatible server.
 - **Not verified**: runs against a live Ollama/vLLM/OpenAI model. No real-LLM accuracy numbers are

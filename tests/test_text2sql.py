@@ -165,3 +165,19 @@ def test_resolve_generator():
     assert isinstance(resolve_generator("openai:llama3@http://x/v1"), OpenAICompatGenerator)
     with pytest.raises(ValueError):
         resolve_generator("nope")
+
+
+def test_bench_cli_reads_api_key_from_named_env_var(monkeypatch, tmp_path):
+    from sqlite_explorer import bench
+
+    seen = []
+
+    def fake_resolve(spec, api_key=None):
+        seen.append(api_key)
+        return TemplateGenerator()
+
+    monkeypatch.setattr(bench, "resolve_generator", fake_resolve)
+    monkeypatch.setenv("GEMINI_API_KEY", "gem-key")
+    monkeypatch.setenv("SQLITE_DB", str(build_sample_db(tmp_path / "s.db")))
+    bench.main(["--generator", "openai:m@http://x/v1", "--api-key-env", "GEMINI_API_KEY"])
+    assert seen == ["gem-key"]
