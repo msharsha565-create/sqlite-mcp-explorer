@@ -1,0 +1,53 @@
+{"id": "q01", "category": "simple_count", "question": "How many customers are from US?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE country = 'US'"}
+{"id": "q02", "category": "simple_count", "question": "How many customers are from UK?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE country = 'UK'"}
+{"id": "q03", "category": "simple_count", "question": "How many customers are from DE?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE country = 'DE'"}
+{"id": "q04", "category": "simple_count", "question": "How many customers are from IN?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE country = 'IN'"}
+{"id": "q05", "category": "simple_count", "question": "How many customers are from BR?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE country = 'BR'"}
+{"id": "q06", "category": "simple_count", "question": "How many customers are from JP?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE country = 'JP'"}
+{"id": "q07", "category": "simple_count", "question": "How many products are in the Books category?", "gold_sql": "SELECT COUNT(*) FROM products WHERE category = 'Books'"}
+{"id": "q08", "category": "simple_count", "question": "How many products are in the Electronics category?", "gold_sql": "SELECT COUNT(*) FROM products WHERE category = 'Electronics'"}
+{"id": "q09", "category": "simple_count", "question": "How many products are in the Garden category?", "gold_sql": "SELECT COUNT(*) FROM products WHERE category = 'Garden'"}
+{"id": "q10", "category": "simple_count", "question": "How many products are in the Toys category?", "gold_sql": "SELECT COUNT(*) FROM products WHERE category = 'Toys'"}
+{"id": "q11", "category": "simple_count", "question": "How many products are in the Kitchen category?", "gold_sql": "SELECT COUNT(*) FROM products WHERE category = 'Kitchen'"}
+{"id": "q12", "category": "aggregate", "question": "What is the average price of Books products?", "gold_sql": "SELECT AVG(price) FROM products WHERE category = 'Books'"}
+{"id": "q13", "category": "aggregate", "question": "What is the average price of Electronics products?", "gold_sql": "SELECT AVG(price) FROM products WHERE category = 'Electronics'"}
+{"id": "q14", "category": "aggregate", "question": "What is the average price of Garden products?", "gold_sql": "SELECT AVG(price) FROM products WHERE category = 'Garden'"}
+{"id": "q15", "category": "aggregate", "question": "What is the average price of Toys products?", "gold_sql": "SELECT AVG(price) FROM products WHERE category = 'Toys'"}
+{"id": "q16", "category": "aggregate", "question": "What is the average price of Kitchen products?", "gold_sql": "SELECT AVG(price) FROM products WHERE category = 'Kitchen'"}
+{"id": "q17", "category": "simple_count", "question": "How many orders are shipped?", "gold_sql": "SELECT COUNT(*) FROM orders WHERE status = 'shipped'"}
+{"id": "q18", "category": "simple_count", "question": "How many orders are pending?", "gold_sql": "SELECT COUNT(*) FROM orders WHERE status = 'pending'"}
+{"id": "q19", "category": "simple_count", "question": "How many orders are cancelled?", "gold_sql": "SELECT COUNT(*) FROM orders WHERE status = 'cancelled'"}
+{"id": "q20", "category": "ordering", "question": "What is the most expensive product?", "gold_sql": "SELECT name FROM products ORDER BY price DESC LIMIT 1"}
+{"id": "q21", "category": "simple_count", "question": "How many different countries do customers come from?", "gold_sql": "SELECT COUNT(DISTINCT country) FROM customers"}
+{"id": "q22", "category": "ordering", "question": "List all countries our customers come from in alphabetical order.", "gold_sql": "SELECT DISTINCT country FROM customers ORDER BY country"}
+{"id": "q23", "category": "filter", "question": "List the names of products priced above 50.", "gold_sql": "SELECT name FROM products WHERE price > 50"}
+{"id": "q24", "category": "filter", "question": "List the names of products priced above 100.", "gold_sql": "SELECT name FROM products WHERE price > 100"}
+{"id": "q25", "category": "filter", "question": "List the names of products priced above 150.", "gold_sql": "SELECT name FROM products WHERE price > 150"}
+{"id": "q26", "category": "join", "question": "How many orders were placed by customers from US?", "gold_sql": "SELECT COUNT(*) FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.country = 'US'"}
+{"id": "q27", "category": "join", "question": "How many orders were placed by customers from UK?", "gold_sql": "SELECT COUNT(*) FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.country = 'UK'"}
+{"id": "q28", "category": "join", "question": "How many orders were placed by customers from DE?", "gold_sql": "SELECT COUNT(*) FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.country = 'DE'"}
+{"id": "q29", "category": "join", "question": "How many orders were placed by customers from IN?", "gold_sql": "SELECT COUNT(*) FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.country = 'IN'"}
+{"id": "q30", "category": "join", "question": "How many order items belong to shipped orders?", "gold_sql": "SELECT COUNT(*) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.status = 'shipped'"}
+{"id": "q31", "category": "join", "question": "How many order items belong to pending orders?", "gold_sql": "SELECT COUNT(*) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.status = 'pending'"}
+{"id": "q32", "category": "join", "question": "How many order items belong to cancelled orders?", "gold_sql": "SELECT COUNT(*) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.status = 'cancelled'"}
+{"id": "q33", "category": "join_aggregate", "question": "What is the total revenue from shipped orders in the Books category?", "gold_sql": "SELECT ROUND(SUM(oi.quantity * p.price), 2) FROM order_items oi JOIN products p ON p.id = oi.product_id JOIN orders o ON o.id = oi.order_id WHERE o.status = 'shipped' AND p.category = 'Books'"}
+{"id": "q34", "category": "join_aggregate", "question": "What is the total revenue from shipped orders in the Electronics category?", "gold_sql": "SELECT ROUND(SUM(oi.quantity * p.price), 2) FROM order_items oi JOIN products p ON p.id = oi.product_id JOIN orders o ON o.id = oi.order_id WHERE o.status = 'shipped' AND p.category = 'Electronics'"}
+{"id": "q35", "category": "join_aggregate", "question": "What is the total revenue from shipped orders in the Garden category?", "gold_sql": "SELECT ROUND(SUM(oi.quantity * p.price), 2) FROM order_items oi JOIN products p ON p.id = oi.product_id JOIN orders o ON o.id = oi.order_id WHERE o.status = 'shipped' AND p.category = 'Garden'"}
+{"id": "q36", "category": "join_aggregate", "question": "What is the total revenue from shipped orders in the Toys category?", "gold_sql": "SELECT ROUND(SUM(oi.quantity * p.price), 2) FROM order_items oi JOIN products p ON p.id = oi.product_id JOIN orders o ON o.id = oi.order_id WHERE o.status = 'shipped' AND p.category = 'Toys'"}
+{"id": "q37", "category": "join_aggregate", "question": "What is the total revenue from shipped orders in the Kitchen category?", "gold_sql": "SELECT ROUND(SUM(oi.quantity * p.price), 2) FROM order_items oi JOIN products p ON p.id = oi.product_id JOIN orders o ON o.id = oi.order_id WHERE o.status = 'shipped' AND p.category = 'Kitchen'"}
+{"id": "q38", "category": "join_aggregate", "question": "What is the total quantity sold of Books products?", "gold_sql": "SELECT SUM(oi.quantity) FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.category = 'Books'"}
+{"id": "q39", "category": "join_aggregate", "question": "What is the total quantity sold of Electronics products?", "gold_sql": "SELECT SUM(oi.quantity) FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.category = 'Electronics'"}
+{"id": "q40", "category": "join_aggregate", "question": "What is the total quantity sold of Garden products?", "gold_sql": "SELECT SUM(oi.quantity) FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.category = 'Garden'"}
+{"id": "q41", "category": "join_aggregate", "question": "What is the total quantity sold of Toys products?", "gold_sql": "SELECT SUM(oi.quantity) FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.category = 'Toys'"}
+{"id": "q42", "category": "join_aggregate", "question": "What is the total quantity sold of Kitchen products?", "gold_sql": "SELECT SUM(oi.quantity) FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.category = 'Kitchen'"}
+{"id": "q43", "category": "date", "question": "How many customers signed up in 2023-01?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE signup_date LIKE '2023-01-%'"}
+{"id": "q44", "category": "date", "question": "How many customers signed up in 2023-03?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE signup_date LIKE '2023-03-%'"}
+{"id": "q45", "category": "date", "question": "How many customers signed up in 2023-06?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE signup_date LIKE '2023-06-%'"}
+{"id": "q46", "category": "date", "question": "How many customers signed up in 2023-09?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE signup_date LIKE '2023-09-%'"}
+{"id": "q47", "category": "date", "question": "How many customers signed up in 2023-12?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE signup_date LIKE '2023-12-%'"}
+{"id": "q48", "category": "group_by", "question": "How many customers are there in each country?", "gold_sql": "SELECT country, COUNT(*) FROM customers GROUP BY country"}
+{"id": "q49", "category": "group_by", "question": "How many orders are there in each status?", "gold_sql": "SELECT status, COUNT(*) FROM orders GROUP BY status"}
+{"id": "q50", "category": "group_by", "question": "What is the average product price in each category?", "gold_sql": "SELECT category, ROUND(AVG(price), 2) FROM products GROUP BY category"}
+{"id": "q51", "category": "subquery", "question": "How many customers have never placed an order?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE id NOT IN (SELECT customer_id FROM orders)"}
+{"id": "q52", "category": "top_n", "question": "Which 3 customers placed the most orders? Give their names.", "gold_sql": "SELECT c.name FROM customers c JOIN orders o ON o.customer_id = c.id GROUP BY c.id ORDER BY COUNT(*) DESC LIMIT 3"}
+{"id": "q53", "category": "top_n", "question": "Which category has the highest average price?", "gold_sql": "SELECT category FROM products GROUP BY category ORDER BY AVG(price) DESC LIMIT 1"}

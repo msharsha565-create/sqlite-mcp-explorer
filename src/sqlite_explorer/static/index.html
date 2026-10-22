@@ -21,6 +21,8 @@ th,td{border-bottom:1px solid var(--line);padding:5px 9px;text-align:left;white-
 <p class="sub">Read-only SQL over a synthetic shop database. Writes are rejected.</p>
 <aside id="schema"></aside>
 <section>
+<div style="display:flex;gap:8px;margin-bottom:10px"><input id="q" placeholder="Ask in plain English, e.g. How many customers are from US?" style="flex:1;padding:9px 11px;font-size:14px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px"><button id="ask" style="margin:0">Ask</button></div>
+<div id="gen" class="mut" style="font-size:12px;margin-bottom:8px"></div>
 <textarea id="sql" spellcheck="false">SELECT p.category, ROUND(SUM(oi.quantity * p.price), 2) AS revenue
 FROM order_items oi
 JOIN products p ON p.id = oi.product_id
@@ -38,7 +40,7 @@ ORDER BY revenue DESC;</textarea>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'NULL').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-fetch('/api/schema').then(r=>r.json()).then(j=>{$('schema').innerHTML='<h3>Tables</h3>'+j.tables.map(t=>`<div class="t"><b>${esc(t.table)}</b> <span class="mut">(${t.row_count})</span>${t.columns.map(c=>`<div class="c">${esc(c.name)} ${esc(c.type)}${c.primary_key?' pk':''}</div>`).join('')}</div>`).join('')});
+fetch('/api/schema').then(r=>r.json()).then(j=>{$('gen').textContent='Text-to-SQL generator: '+(j.generator==='template'?'template baseline (not an LLM; set TEXT2SQL_MODEL to use a real model)':j.generator)+'. Generated SQL runs through the same read-only sandbox.';$('schema').innerHTML='<h3>Tables</h3>'+j.tables.map(t=>`<div class="t"><b>${esc(t.table)}</b> <span class="mut">(${t.row_count})</span>${t.columns.map(c=>`<div class="c">${esc(c.name)} ${esc(c.type)}${c.primary_key?' pk':''}</div>`).join('')}</div>`).join('')});
 async function run(){
   $('msg').textContent='Running...';$('msg').className='mut';$('out').innerHTML='';
   const t=performance.now();
@@ -48,6 +50,17 @@ async function run(){
   $('msg').className='mut';$('msg').textContent=`${j.row_count} row(s)${j.truncated?' (truncated)':''} in ${Math.round(performance.now()-t)} ms`;
   $('out').innerHTML='<thead><tr>'+j.columns.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>'+j.rows.map(r=>'<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>').join('')+'</tbody>';
 }
+$('ask').onclick=async()=>{
+  if(!$('q').value.trim())return;
+  $('msg').className='mut';$('msg').textContent='Generating SQL...';$('out').innerHTML='';
+  const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:$('q').value})});
+  const j=await r.json();
+  if(j.sql)$('sql').value=j.sql;
+  if(!r.ok){$('msg').className='bad';$('msg').textContent=(j.kind==='generation'?'No SQL: ':'Rejected: ')+j.error;return}
+  $('msg').className='mut';$('msg').textContent=`${j.row_count} row(s)${j.truncated?' (truncated)':''}. Generated SQL shown above.`;
+  $('out').innerHTML='<thead><tr>'+j.columns.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>'+j.rows.map(r=>'<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+};
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')$('ask').click()});
 $('run').onclick=run;
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{$('sql').value=b.dataset.q;run()});
 run();

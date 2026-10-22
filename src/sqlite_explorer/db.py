@@ -84,6 +84,42 @@ class SafeDatabase:
         finally:
             conn.close()
 
+    def analyze(self, sql: str) -> dict[str, list[str]]:
+        """Compile (EXPLAIN) one statement without running it; return the tables and columns it
+        reads. Raises QueryRejected on syntax errors, unknown tables/columns, or unsafe statements."""
+        if not sql.strip():
+            raise QueryRejected("Empty query.")
+        reads: set[tuple[str, str]] = set()
+
+        def authorizer(action, arg1, arg2, db, source):
+            if action == sqlite3.SQLITE_READ and arg1:
+                reads.add((arg1, arg2 or ""))
+            return _authorizer(action, arg1, arg2, db, source)
+
+        conn = self._connect()
+        try:
+            conn.set_authorizer(authorizer)
+            try:
+                conn.execute("EXPLAIN " + sql)
+            except (sqlite3.DatabaseError, sqlite3.Warning) as exc:
+                if "not authorized" in str(exc).lower():
+                    raise QueryRejected("Only read-only SELECT queries are allowed.") from exc
+                raise QueryRejected(str(exc)) from exc
+            return {"tables": sorted({t for t, _ in reads}),
+                    "columns": sorted(f"{t}.{c}" for t, c in reads if c)}
+        finally:
+            conn.close()
+
+    def schema_ddl(self) -> str:
+        """CREATE statements for every table, suitable for an LLM prompt."""
+        conn = self._connect()
+        try:
+            rows = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' "
+                                "AND name NOT LIKE 'sqlite_%' ORDER BY name").fetchall()
+            return "\n".join(" ".join(r["sql"].split()) + ";" for r in rows)
+        finally:
+            conn.close()
+
     def tables(self) -> list[str]:
         conn = self._connect()
         try:

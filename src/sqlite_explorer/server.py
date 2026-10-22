@@ -31,6 +31,13 @@ def describe_table(table: str) -> dict[str, Any]:
 
 
 @mcp.tool()
+def get_schema_ddl() -> str:
+    """CREATE TABLE statements for the whole database. Read this first, then write a SELECT for
+    run_query: every table and column you use must appear here."""
+    return get_db().schema_ddl()
+
+
+@mcp.tool()
 def run_query(sql: str) -> dict[str, Any]:
     """Run ONE read-only SELECT statement. Writes, PRAGMA, ATTACH and multiple statements are
     rejected. Results are capped at 200 rows (check `truncated`) and queries time out after 2s."""

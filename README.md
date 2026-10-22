@@ -1,7 +1,9 @@
 # sqlite-mcp-explorer
 
-Read-only SQL access for AI agents over [MCP](https://modelcontextprotocol.io), with a web
-console. Giving an agent a database is risky; this server is built so a bad or hostile query
+A sandboxed text-to-SQL stack for AI agents: a read-only SQL server over
+[MCP](https://modelcontextprotocol.io), a natural-language interface, and a **benchmark that
+scores any text-to-SQL model** on syntax validity, schema adherence and execution accuracy.
+Giving an agent a database is risky; the sandbox is built so a bad, hallucinated or hostile query
 cannot change data or run away.
 
 ![demo](docs/demo.png)
@@ -20,6 +22,36 @@ Several independent layers, so one failure does not open the door:
 
 The tests exercise each layer, including attack queries, and check that data is unchanged
 afterwards.
+
+## Text-to-SQL and benchmark
+
+Ask in plain English; a generator writes SQL, and that SQL runs through the same sandbox as
+everything else. Plug in any OpenAI-compatible model (OpenAI, Ollama, vLLM, LM Studio):
+
+```bash
+TEXT2SQL_MODEL="openai:llama3@http://localhost:11434/v1" sqlite-explorer-web
+```
+
+Benchmark any generator on 53 questions across 10 categories (counts, aggregates, joins,
+group-by, subqueries, top-N, dates). Reference answers are executed SQL, not text:
+
+```bash
+sqlite-explorer-bench --generator template                          # baseline, no LLM
+sqlite-explorer-bench --generator "openai:llama3@http://localhost:11434/v1" --out run.json
+sqlite-explorer-bench --generator ... --min-accuracy 0.8            # exit 1 below 80%, for CI
+```
+
+| Metric | Meaning |
+| --- | --- |
+| Syntax validity | The SQL parses |
+| Schema adherence | Every table and column exists (hallucinations fail here) |
+| Execution accuracy | The result set matches the reference query's (order ignored unless the reference has `ORDER BY`) |
+
+Unsafe SQL (for example a generated `DROP TABLE`) is flagged and never executed.
+
+The bundled **template generator is a regex baseline, not an LLM**. It scores about 45%
+(simple counts and filters pass; every join, group-by and subquery fails), which gives a real
+model something to beat. Its `produced SQL` rate shows how often it declined to answer.
 
 ## Demo (no API key)
 
@@ -49,6 +81,7 @@ SQLITE_DB=/path/to/app.db sqlite-explorer-web
 | --- | --- |
 | `list_tables()` | Tables and views |
 | `describe_table(table)` | Columns, types, keys, foreign keys, row count |
+| `get_schema_ddl()` | `CREATE TABLE` statements; read first, then write SQL against them |
 | `run_query(sql)` | One read-only SELECT; errors if rejected or timed out |
 
 ## Tests
@@ -58,7 +91,19 @@ python -m pytest
 ruff check src tests
 ```
 
+## Verified vs not verified
+
+- **Verified**: the sandbox and benchmark logic (45 tests, including attack queries and a perfect
+  "oracle" generator that scores 100%); the OpenAI-compatible generator against a mocked transport;
+  and the benchmark CLI end to end against a local fake OpenAI-compatible server.
+- **Not verified**: runs against a live Ollama/vLLM/OpenAI model. No real-LLM accuracy numbers are
+  claimed.
+
 ## Limitations
+
+- The benchmark's reference answers are tied to the seeded sample database; use `--cases` with your
+  own questions for another database.
+- Vector / hybrid search is not included.
 
 - SQLite only.
 - A read-only query can still read anything in the file. Point it at a database (or a copy)

@@ -9,7 +9,7 @@ description = "Read-only SQL access for AI agents over MCP, with defense in dept
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-dependencies = ["mcp>=1.2,<2", "starlette>=0.37", "uvicorn>=0.30"]
+dependencies = ["mcp>=1.2,<2", "httpx>=0.27", "starlette>=0.37", "uvicorn>=0.30"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27", "ruff>=0.5"]
@@ -17,12 +17,13 @@ dev = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27", "ruff>=0.5"]
 [project.scripts]
 sqlite-explorer-web = "sqlite_explorer.web:main"
 sqlite-explorer-mcp = "sqlite_explorer.server:main"
+sqlite-explorer-bench = "sqlite_explorer.bench:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-sqlite_explorer = ["static/*.html"]
+sqlite_explorer = ["static/*.html", "data/*.jsonl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

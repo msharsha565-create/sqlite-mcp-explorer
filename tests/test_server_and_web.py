@@ -18,7 +18,7 @@ async def test_mcp_tools_and_safety():
         tables = await s.call_tool("list_tables", {})
         ok = await s.call_tool("run_query", {"sql": "SELECT COUNT(*) AS n FROM customers"})
         bad = await s.call_tool("run_query", {"sql": "DROP TABLE customers"})
-    assert names == {"list_tables", "describe_table", "run_query"}
+    assert names == {"list_tables", "describe_table", "run_query", "get_schema_ddl"}
     assert "customers" in tables.content[0].text
     assert ok.structuredContent["rows"] == [[60]]
     assert bad.isError is True
@@ -35,3 +35,20 @@ def test_web_endpoints():
     timeout = client.post("/api/query", json={"sql": (
         "WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM r) SELECT COUNT(*) FROM r")})
     assert timeout.status_code == 408
+
+
+def test_ask_endpoint_generates_and_executes_sql():
+    client = TestClient(web.app)
+    good = client.post("/api/ask", json={"question": "How many customers are from US?"}).json()
+    assert good["sql"].startswith("SELECT COUNT(*)") and good["row_count"] == 1
+    unknown = client.post("/api/ask", json={"question": "Who is the best customer?"})
+    assert unknown.status_code == 422 and unknown.json()["kind"] == "generation"
+    assert client.post("/api/ask", json={"question": "  "}).status_code == 400
+
+
+def test_ask_endpoint_cannot_be_used_to_write(monkeypatch):
+    monkeypatch.setattr(web, "get_generator", lambda: (lambda q, schema: "DELETE FROM customers"))
+    resp = TestClient(web.app).post("/api/ask", json={"question": "wipe it"})
+    assert resp.status_code == 400 and resp.json()["kind"] == "rejected"
+    assert TestClient(web.app).post("/api/query", json={"sql": "SELECT COUNT(*) FROM customers"}
+                                    ).json()["rows"] == [[60]]
