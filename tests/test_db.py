@@ -117,3 +117,16 @@ def test_describe_rejects_unknown_and_injection(db):
 def test_missing_database_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         SafeDatabase(tmp_path / "missing.db")
+
+
+def test_default_db_path_builds_atomically_and_leaves_no_temp_files(monkeypatch, tmp_path):
+    from sqlite_explorer import sample
+
+    monkeypatch.delenv("SQLITE_DB", raising=False)
+    monkeypatch.setattr(sample.tempfile, "gettempdir", lambda: str(tmp_path))
+    first = sample.default_db_path()
+    reader = SafeDatabase(first)
+    again = sample.default_db_path()  # rebuild while a reader exists
+    assert first == again
+    assert reader.query("SELECT COUNT(*) FROM customers")["rows"] == [[60]]
+    assert [p.name for p in tmp_path.iterdir()] == ["sqlite_explorer_sample.db"]

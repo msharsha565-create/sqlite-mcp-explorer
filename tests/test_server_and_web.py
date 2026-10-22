@@ -52,3 +52,10 @@ def test_ask_endpoint_cannot_be_used_to_write(monkeypatch):
     assert resp.status_code == 400 and resp.json()["kind"] == "rejected"
     assert TestClient(web.app).post("/api/query", json={"sql": "SELECT COUNT(*) FROM customers"}
                                     ).json()["rows"] == [[60]]
+
+
+@pytest.mark.parametrize("path", ["/api/query", "/api/ask"])
+def test_malformed_request_bodies_return_400_not_500(path):
+    client = TestClient(web.app)
+    assert client.post(path, content=b"not json").status_code == 400
+    assert client.post(path, json=["a"]).status_code == 400

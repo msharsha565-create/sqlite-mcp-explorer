@@ -25,6 +25,17 @@ def get_generator():
                              api_key=os.environ.get("OPENAI_API_KEY"))
 
 
+async def _json_object(request: Request) -> dict | None:
+    try:
+        body = await request.json()
+    except ValueError:
+        return None
+    return body if isinstance(body, dict) else None
+
+
+BAD_BODY = {"error": "Body must be a JSON object."}
+
+
 async def api_schema(request: Request) -> JSONResponse:
     db = get_db()
     return JSONResponse({"tables": [db.describe(t) for t in db.tables()],
@@ -33,7 +44,10 @@ async def api_schema(request: Request) -> JSONResponse:
 
 async def api_ask(request: Request) -> JSONResponse:
     """Natural language -> SQL -> the same sandboxed execution path as /api/query."""
-    question = str((await request.json()).get("question", "")).strip()
+    body = await _json_object(request)
+    if body is None:
+        return JSONResponse(BAD_BODY, status_code=400)
+    question = str(body.get("question", "")).strip()
     if not question:
         return JSONResponse({"error": "Ask a question first."}, status_code=400)
     db = get_db()
@@ -51,7 +65,10 @@ async def api_ask(request: Request) -> JSONResponse:
 
 
 async def api_query(request: Request) -> JSONResponse:
-    sql = str((await request.json()).get("sql", ""))
+    body = await _json_object(request)
+    if body is None:
+        return JSONResponse(BAD_BODY, status_code=400)
+    sql = str(body.get("sql", ""))
     try:
         return JSONResponse(get_db().query(sql))
     except QueryRejected as exc:

@@ -93,7 +93,7 @@ ruff check src tests
 
 ## Verified vs not verified
 
-- **Verified**: the sandbox and benchmark logic (45 tests, including attack queries and a perfect
+- **Verified**: the sandbox and benchmark logic (48 tests, including attack queries and a perfect
   "oracle" generator that scores 100%); the OpenAI-compatible generator against a mocked transport;
   and the benchmark CLI end to end against a local fake OpenAI-compatible server.
 - **Not verified**: runs against a live Ollama/vLLM/OpenAI model. No real-LLM accuracy numbers are

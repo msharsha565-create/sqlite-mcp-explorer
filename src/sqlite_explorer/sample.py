@@ -58,4 +58,10 @@ def default_db_path() -> Path:
     configured = os.environ.get("SQLITE_DB")
     if configured:
         return Path(configured)
-    return build_sample_db(Path(tempfile.gettempdir()) / "sqlite_explorer_sample.db")
+    # Build next to the target and rename into place: concurrent processes never see (or read)
+    # a half-written file, and one that already has the old inode open is unaffected.
+    target = Path(tempfile.gettempdir()) / "sqlite_explorer_sample.db"
+    staging = target.with_name(f"{target.name}.{os.getpid()}.tmp")
+    build_sample_db(staging)
+    os.replace(staging, target)
+    return target
