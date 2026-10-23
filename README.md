@@ -36,13 +36,21 @@ Gemini works through Google's OpenAI-compatible endpoint; keep the key under its
 
 ```bash
 GEMINI_API_KEY=... TEXT2SQL_API_KEY_ENV=GEMINI_API_KEY \
-TEXT2SQL_MODEL="openai:<gemini-model>@https://generativelanguage.googleapis.com/v1beta/openai" \
+TEXT2SQL_MODEL="openai:gemini-3.1-flash-lite@https://generativelanguage.googleapis.com/v1beta/openai" \
 sqlite-explorer-web
 GEMINI_API_KEY=... sqlite-explorer-bench --api-key-env GEMINI_API_KEY \
-  --generator "openai:<gemini-model>@https://generativelanguage.googleapis.com/v1beta/openai"
+  --generator "openai:gemini-3.1-flash-lite@https://generativelanguage.googleapis.com/v1beta/openai"
 ```
 
-Use a current model name from the provider's docs.
+Use a current model name from the provider's docs (Gemini 2.5 models are already retired for new
+users). The generator retries 429/5xx responses, but gives up at once on a daily quota.
+
+**Live result** (`gemini-3.1-flash-lite`, free tier, run 2026-10-22, one run): 53 questions,
+100% produced SQL, 100% syntax validity, 100% schema adherence, **100% execution accuracy**;
+latency p50 13.1 s, p95 52.2 s. A first run scored 98% (52/53): `q50` ("average product price
+in each category") failed because the reference rounds to 2 decimals and the question did not say
+so. The question now says "rounded to 2 decimals". This is a small, easy benchmark, so 100% shows
+the pipeline works end to end rather than ranking models.
 
 Benchmark any generator on 53 questions across 10 categories (counts, aggregates, joins,
 group-by, subqueries, top-N, dates). Reference answers are executed SQL, not text:
@@ -105,11 +113,11 @@ ruff check src tests
 
 ## Verified vs not verified
 
-- **Verified**: the sandbox and benchmark logic (49 tests, including attack queries and a perfect
+- **Verified**: the sandbox and benchmark logic (51 tests, including attack queries and a perfect
   "oracle" generator that scores 100%); the OpenAI-compatible generator against a mocked transport;
   and the benchmark CLI end to end against a local fake OpenAI-compatible server.
-- **Not verified**: runs against a live Ollama/vLLM/OpenAI model. No real-LLM accuracy numbers are
-  claimed.
+- **Verified live**: the benchmark against Gemini `gemini-3.1-flash-lite` (result above).
+- **Not verified**: runs against a live Ollama/vLLM/OpenAI model, and the web UI with a live model.
 
 ## Limitations
 

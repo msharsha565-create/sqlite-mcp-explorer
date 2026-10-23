@@ -47,7 +47,7 @@
 {"id": "q47", "category": "date", "question": "How many customers signed up in 2023-12?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE signup_date LIKE '2023-12-%'"}
 {"id": "q48", "category": "group_by", "question": "How many customers are there in each country?", "gold_sql": "SELECT country, COUNT(*) FROM customers GROUP BY country"}
 {"id": "q49", "category": "group_by", "question": "How many orders are there in each status?", "gold_sql": "SELECT status, COUNT(*) FROM orders GROUP BY status"}
-{"id": "q50", "category": "group_by", "question": "What is the average product price in each category?", "gold_sql": "SELECT category, ROUND(AVG(price), 2) FROM products GROUP BY category"}
+{"id": "q50", "category": "group_by", "question": "What is the average product price in each category, rounded to 2 decimals?", "gold_sql": "SELECT category, ROUND(AVG(price), 2) FROM products GROUP BY category"}
 {"id": "q51", "category": "subquery", "question": "How many customers have never placed an order?", "gold_sql": "SELECT COUNT(*) FROM customers WHERE id NOT IN (SELECT customer_id FROM orders)"}
 {"id": "q52", "category": "top_n", "question": "Which 3 customers placed the most orders? Give their names.", "gold_sql": "SELECT c.name FROM customers c JOIN orders o ON o.customer_id = c.id GROUP BY c.id ORDER BY COUNT(*) DESC LIMIT 3"}
 {"id": "q53", "category": "top_n", "question": "Which category has the highest average price?", "gold_sql": "SELECT category FROM products GROUP BY category ORDER BY AVG(price) DESC LIMIT 1"}

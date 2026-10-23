@@ -181,3 +181,23 @@ def test_bench_cli_reads_api_key_from_named_env_var(monkeypatch, tmp_path):
     monkeypatch.setenv("SQLITE_DB", str(build_sample_db(tmp_path / "s.db")))
     bench.main(["--generator", "openai:m@http://x/v1", "--api-key-env", "GEMINI_API_KEY"])
     assert seen == ["gem-key"]
+
+
+def test_openai_generator_retries_rate_limits_then_succeeds(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr("sqlite_explorer.text2sql.time.sleep", sleeps.append)
+    replies = iter([httpx.Response(429, headers={"retry-after": "7"}), httpx.Response(503),
+                    httpx.Response(200, json={"choices": [{"message": {"content": "SELECT 1"}}]})])
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: next(replies)))
+    assert OpenAICompatGenerator("m", client=client)("q", "ddl") == "SELECT 1"
+    assert sleeps == [7.0, 10]
+
+
+def test_openai_generator_does_not_retry_a_daily_quota(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr("sqlite_explorer.text2sql.time.sleep", sleeps.append)
+    body = '{"error": {"details": [{"retryDelay": "29919s"}]}}'
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(429, text=body)))
+    with pytest.raises(httpx.HTTPStatusError, match="429"):
+        OpenAICompatGenerator("m", client=client)("q", "ddl")
+    assert sleeps == []
